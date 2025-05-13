@@ -1,0 +1,118 @@
+const mysql = require('mysql2');
+const connection = mysql.createConnection({
+    host: 'localhost',
+    database: 'school',
+    user: 'root',
+    password: 'root'
+});
+const createDatabase = "CREATE DATABASE IF NOT EXISTS school";
+const createTable = "CREATE TABLE Student (id int, name VARCHAR(255), city VARCHAR(255))";
+const insertValue = "INSERT INTO Student (id, name, city) VALUES ?";
+//const delDuplicates = "DELETE s1 FROM student s1 JOIN student s2 ON s1.id > s2.id AND s1.name = s2.name AND s1.city= s2.city";
+const delDuplicates = "SELECT DISTINCT id, name, city FROM student";
+const deleteDuplicatesQuery = `
+DELETE FROM student
+WHERE id NOT IN (
+  SELECT min_id FROM (
+    SELECT MIN(id) AS min_id
+    FROM student
+    GROUP BY name, city
+  ) AS subquery
+);
+`;
+let values = [
+    [2, 'Peter', 'Lowstreet 4'],
+    [9, 'Amy', 'Apple st 652'],
+    [5, 'Hannah', 'Mountain 21'],
+    [5, 'Michael', 'Valley 345'],
+    [3, 'Sandy', 'Ocean blvd 2'],
+    [1, 'Betty', 'Green Grass 1'],
+    [8, 'Richard', 'Sky st 331'],
+    [9, 'Susan', 'One way 98'],
+    [7, 'Vicky', 'Yellow Garden 2'],
+    [4, 'Ben', 'Park Lane 38'],
+    [5, 'William', 'Central st 954'],
+    [10, 'Chuck', 'Main Road 989'],
+    [11, 'Viola', 'Sideway 1633']
+];
+
+connection.connect(function (err) {
+    if (err) throw err.message;
+    console.log("Connection Success!");
+    connection.query(createDatabase, function (err, result) {
+        if (err) throw err.message;
+        console.log("Database created or already exists");
+
+    });
+
+    connection.changeUser({ database: 'school' }, function (err) {
+        if (err) throw err;
+        connection.query(createTable, function (err) {
+            if (err) throw err.message;
+            console.log("Table Created");
+
+        });
+    });
+
+    connection.changeUser({ database: 'school' }, function (err) {
+        if (err) throw err.message;
+        connection.query(insertValue, [values], function (err, result) {
+            if (err) throw err.message;
+            console.log("Number of records inserted: " + result.affectedRows);
+
+        });
+    });
+
+    connection.query("SELECT * FROM student WHERE id=9", function (err, result, fields) {
+        if (err) throw err.message;
+        console.log("results \n", result);
+        console.log("Column :", fields.length);
+        console.log("Rows :", result.length);
+
+
+    });
+
+    connection.query(deleteDuplicatesQuery, function (err, results, fields) {
+        if (err) throw err;
+        console.log(results);
+
+    });
+});
+
+
+/* connection.end(function(err){
+            if(err)console.error("Error in closing connection", err.message);
+            console.log("Connection ended");
+            
+        }) */
+
+
+const mysql = require('mysql2');
+const connection = mysql.createConnection({
+    host: 'localhost',
+    database: 'school',
+    user: 'root',
+    password: 'root'
+});
+
+const sortResult = "SELECT * FROM student ORDER BY id";
+const updateItem = "UPDATE student SET name='Priyanka' WHERE id=9";
+const limit = "SELECT * FROM student LIMIT 5 OFFSET 2";
+
+connection.connect(function (err) {
+    if (err) throw err.message;
+    console.log("Connection Success!");
+
+    connection.query(sortResult, function (err, result) {
+        if (err) throw err;
+        console.log(result);
+
+    });
+
+    connection.query(limit, function (err, result) {
+        if (err) throw err;
+        console.log(result);
+
+    });
+
+});
